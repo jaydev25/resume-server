@@ -1,6 +1,6 @@
 endpoints:
   - name: websocket
-    type: ws
+    type: WS
     context: /
     port: 3000
     visibility: public
