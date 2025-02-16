@@ -1,51 +1,38 @@
-version: 1.0
-type: Component
-buildPreset: nodejs
-build:
-  commands:
-    - npm install
-run:
-  command: node server.js
-container:
-  image: resume-server
+component:
+  name: my-nodejs-app
+  runtime: nodejs18
+  source:
+    type: git
+    repository: https://github.com/jaydev25/resume-server
+    branch: main
+  build:
+    commands:
+      - npm install
+  run:
+    command: node server.js
+    env:
+      - name: PORT
+        value: "3000"
+      - name: NODE_ENV
+        value: "production"
   ports:
-    - port: 3000
-      protocol: TCP
-      serviceType: WebSocket
-  resources:
-    memory: 256Mi
-    cpu: 0.2
-endpoints:
-  - name: default
-    port: 3000
-    type: WebSocket
-    context: /
-    schemaDefinition: ""
-probes:
-  liveness:
-    httpGet:
-      path: /health
+    - name: websocket
       port: 3000
-    initialDelaySeconds: 20
-    periodSeconds: 60
-    failureThreshold: 3
-  readiness:
-    httpGet:
-      path: /health
-      port: 3000
-    initialDelaySeconds: 20
-    periodSeconds: 60
-envConfig:
-  envVars:
-    - name: PORT
-      value: "3000"
-    - name: NODE_ENV
-      value: "production"
-scaling:
-  minReplicas: 1
-  maxReplicas: 1
-  metrics:
-    - type: Resource
-      resource:
-        name: cpu
-        targetAverageUtilization: 70
+      protocol: WS
+  scaling:
+    minReplicas: 1
+    maxReplicas: 3
+  ingress:
+    rules:
+      - host: resume-server.choreo.dev
+        paths:
+          - path: /
+            backend:
+              serviceName: resume-server
+              servicePort: 3000
+            pathType: Prefix
+            protocol: WS
+  observability:
+    logs: enabled
+    metrics: enabled
+    tracing: enabled
