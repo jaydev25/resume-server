@@ -1,0 +1,32 @@
+endpoints:
+  - name: websocket
+    type: ws
+    context: /
+    port: 3000
+    visibility: public
+    schemaDefinition: |
+      {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["viewerCount", "connection", "disconnection"]
+          },
+          "count": {
+            "type": "integer",
+            "description": "Number of connected viewers"
+          }
+        }
+      }
+    metadata:
+      - name: description
+        value: "WebSocket endpoint for real-time viewer count updates"
+  - name: health
+    type: http
+    context: /health
+    port: 3000
+    visibility: private
+    method: GET
+    metadata:
+      - name: description
+        value: "Health check endpoint"

@@ -1,0 +1,98 @@
+openapi: 3.1.0
+info:
+  title: Resume Server WebSocket API
+  version: 1.0.0
+  description: |
+    WebSocket server for real-time viewer count updates.
+    Provides endpoints for WebSocket connections and health checks.
+
+servers:
+  - url: wss://resume-server.choreo.dev
+    description: Production WebSocket server
+  - url: ws://localhost:3000
+    description: Local development server
+
+paths:
+  /:
+    get:
+      summary: WebSocket Connection Endpoint
+      description: Endpoint for establishing WebSocket connections
+      tags:
+        - WebSocket
+      responses:
+        '101':
+          description: WebSocket connection established
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebSocketMessage'
+  /health:
+    get:
+      summary: Health Check
+      description: Endpoint to check server health
+      tags:
+        - Health
+      responses:
+        '200':
+          description: Server is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+
+components:
+  schemas:
+    WebSocketMessage:
+      type: object
+      oneOf:
+        - $ref: '#/components/schemas/ViewerCountMessage'
+        - $ref: '#/components/schemas/ConnectionMessage'
+        - $ref: '#/components/schemas/DisconnectionMessage'
+
+    ViewerCountMessage:
+      type: object
+      required:
+        - type
+        - count
+      properties:
+        type:
+          type: string
+          enum: [viewerCount]
+        count:
+          type: integer
+          description: Number of connected viewers
+          example: 5
+
+    ConnectionMessage:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          enum: [connection]
+        timestamp:
+          type: string
+          format: date-time
+
+    DisconnectionMessage:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          enum: [disconnection]
+        timestamp:
+          type: string
+          format: date-time
+
+tags:
+  - name: WebSocket
+    description: WebSocket related endpoints
+  - name: Health
+    description: Health check endpoints
