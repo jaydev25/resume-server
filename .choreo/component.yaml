@@ -1,0 +1,44 @@
+version: 1.0
+type: Container
+buildPreset: docker
+container:
+  image: resume-server
+  ports:
+    - port: 3000
+      protocol: HTTP
+      serviceType: WebSocket
+  resources:
+    memory: 512Mi
+    cpu: 0.5
+endpoints:
+  - name: default
+    port: 3000
+    type: WebSocket
+    context: /
+    schemaDefinition: ""
+probes:
+  liveness:
+    httpGet:
+      path: /health
+      port: 3000
+    initialDelaySeconds: 10
+    periodSeconds: 30
+    failureThreshold: 3
+  readiness:
+    httpGet:
+      path: /health
+      port: 3000
+    initialDelaySeconds: 10
+    periodSeconds: 30
+envConfig:
+  envVars:
+    - name: PORT
+      value: "3000"
+scaling:
+  minReplicas: 1
+  maxReplicas: 3
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        targetAverageUtilization: 80
