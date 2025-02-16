@@ -22,7 +22,7 @@ endpoints:
       - name: description
         value: "WebSocket endpoint for real-time viewer count updates"
   - name: health
-    type: http
+    type: REST
     context: /health
     port: 3000
     visibility: private
