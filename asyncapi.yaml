@@ -1,0 +1,58 @@
+asyncapi: '2.0.0'
+info:
+  title: 'Resume Viewer Count API'
+  version: 1.0.0
+  description: 'WebSocket API for real-time viewer count updates'
+
+servers:
+  localhost:
+    url: localhost:3000
+    protocol: ws
+    description: Local development server
+
+channels:
+  /:
+    publish:
+      operationId: SendHeartbeat
+      message:
+        $ref: '#/components/messages/heartbeatMessage'
+    subscribe:
+      operationId: ReceiveViewerCount
+      message:
+        $ref: '#/components/messages/viewerCountMessage'
+
+components:
+  messages:
+    viewerCountMessage:
+      name: viewerCount
+      title: Viewer Count Update
+      payload:
+        type: object
+        required:
+          - type
+          - count
+        properties:
+          type:
+            type: string
+            enum: ['viewerCount']
+          count:
+            type: integer
+            description: 'Number of connected viewers'
+            minimum: 0
+        example:
+          type: 'viewerCount'
+          count: 5
+
+    heartbeatMessage:
+      name: heartbeat
+      title: Connection Heartbeat
+      payload:
+        type: object
+        required:
+          - type
+        properties:
+          type:
+            type: string
+            enum: ['ping', 'pong']
+        example:
+          type: 'ping'
