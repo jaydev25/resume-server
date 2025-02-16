@@ -1,15 +1,15 @@
 version: 1.0
-type: Container
-buildPreset: docker
+type: Component
+buildPreset: nodejs
 container:
   image: resume-server
   ports:
     - port: 3000
-      protocol: HTTP
+      protocol: TCP
       serviceType: WebSocket
   resources:
-    memory: 512Mi
-    cpu: 0.5
+    memory: 256Mi
+    cpu: 0.2
 endpoints:
   - name: default
     port: 3000
@@ -21,24 +21,26 @@ probes:
     httpGet:
       path: /health
       port: 3000
-    initialDelaySeconds: 10
-    periodSeconds: 30
+    initialDelaySeconds: 20
+    periodSeconds: 60
     failureThreshold: 3
   readiness:
     httpGet:
       path: /health
       port: 3000
-    initialDelaySeconds: 10
-    periodSeconds: 30
+    initialDelaySeconds: 20
+    periodSeconds: 60
 envConfig:
   envVars:
     - name: PORT
       value: "3000"
+    - name: NODE_ENV
+      value: "production"
 scaling:
   minReplicas: 1
-  maxReplicas: 3
+  maxReplicas: 1
   metrics:
     - type: Resource
       resource:
         name: cpu
-        targetAverageUtilization: 80
+        targetAverageUtilization: 70
