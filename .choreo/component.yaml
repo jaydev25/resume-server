@@ -1,5 +1,12 @@
 schemaVersion: 1.1
 
+component:
+  name: resume-server
+  version: 1.0.0
+  schemaFilePath: openapi.yaml
+  run:
+    command: node server.js
+
 endpoints:
   - name: resume-server-ws
     displayName: Resume Server WebSocket
@@ -20,3 +27,4 @@ endpoints:
     networkVisibilities:
       - Organization
     schemaFilePath: openapi.yaml
+

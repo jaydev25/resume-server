@@ -9,8 +9,6 @@ info:
 servers:
   - url: ws://resume-server.choreo.dev
     description: Production WebSocket server
-  - url: ws://localhost:3000
-    description: Local development server
 
 paths:
   /:
