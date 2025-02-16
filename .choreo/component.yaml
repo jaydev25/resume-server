@@ -1,33 +1,22 @@
 schemaVersion: 1.1
+
 endpoints:
-  - name: websocket
+  - name: resume-server-ws
+    displayName: Resume Server WebSocket
+    service:
+      basePath: /
+      port: 3000
     type: WS
-    context: /
-    port: 3000
-    visibility: public
-    schemaDefinition: |
-      {
-        "type": "object",
-        "properties": {
-          "type": {
-            "type": "string",
-            "enum": ["viewerCount", "connection", "disconnection"]
-          },
-          "count": {
-            "type": "integer",
-            "description": "Number of connected viewers"
-          }
-        }
-      }
-    metadata:
-      - name: description
-        value: "WebSocket endpoint for real-time viewer count updates"
-  - name: health
+    networkVisibilities:
+      - Public
+    schemaFilePath: openapi.yaml
+
+  - name: resume-server-health
+    displayName: Resume Server Health Check
+    service:
+      basePath: /health
+      port: 3000
     type: REST
-    context: /health
-    port: 3000
-    visibility: private
-    method: GET
-    metadata:
-      - name: description
-        value: "Health check endpoint"
+    networkVisibilities:
+      - Organization
+    schemaFilePath: openapi.yaml
