@@ -7,7 +7,7 @@ info:
     Provides endpoints for WebSocket connections and health checks.
 
 servers:
-  - url: wss://resume-server.choreo.dev
+  - url: ws://resume-server.choreo.dev
     description: Production WebSocket server
   - url: ws://localhost:3000
     description: Local development server
