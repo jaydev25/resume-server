@@ -2,29 +2,30 @@ schemaVersion: 1.1
 
 component:
   name: resume-server
-  version: 1.0.0
-  schemaFilePath: openapi.yaml
+  runtime: nodejs18
+  source:
+    type: git
+    repository: https://github.com/jaydev25/resume-server
+    branch: main
   run:
     command: node server.js
 
-endpoints:
-  - name: resume-server-ws
-    displayName: Resume Server WebSocket
-    service:
-      basePath: /
-      port: 3000
-    type: WS
-    networkVisibilities:
-      - Public
-    schemaFilePath: openapi.yaml
+  endpoints:
+    - name: resume-server-ws
+      displayName: Resume Server WebSocket
+      service:
+        basePath: /
+        port: 3000
+      type: WS
+      networkVisibilities:
+        - Public
 
-  - name: resume-server-health
-    displayName: Resume Server Health Check
-    service:
-      basePath: /health
-      port: 3000
-    type: REST
-    networkVisibilities:
-      - Organization
-    schemaFilePath: openapi.yaml
+    - name: resume-server-health
+      displayName: Resume Server Health Check
+      service:
+        basePath: /health
+        port: 3000
+      type: REST
+      networkVisibilities:
+        - Organization
 
