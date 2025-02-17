@@ -87,6 +87,8 @@ jobs:
             git reset --hard origin/main
           fi
           
-          # Install dependencies and start/restart application
+          # Install dependencies
           npm install --production
-          pm2 restart server || pm2 start server.js --name server --env production
+          
+          # Start application with PM2 using sudo for port 443
+          sudo env PATH=$PATH pm2 restart server || sudo env PATH=$PATH pm2 start server.js --name server --env production
