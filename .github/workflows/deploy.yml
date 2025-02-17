@@ -7,6 +7,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment: prod
     
     steps:
     - uses: actions/checkout@v2
@@ -31,12 +32,15 @@ jobs:
         
     - name: Deploy to EC2
       uses: appleboy/ssh-action@master
+      env:
+        NODE_ENV: production
       with:
         host: ${{ secrets.EC2_HOST }}
         username: ${{ secrets.EC2_USERNAME }}
         key: ${{ secrets.EC2_SSH_KEY }}
         script: |
+          export NODE_ENV=production
           cd ~/resume-server
           git pull origin main
-          npm install
-          pm2 restart server || pm2 start server.js --name server
+          npm install --production
+          pm2 restart server || pm2 start server.js --name server --env production
