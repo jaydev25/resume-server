@@ -40,7 +40,25 @@ jobs:
         key: ${{ secrets.EC2_SSH_KEY }}
         script: |
           export NODE_ENV=production
+          # Create app directory if it doesn't exist
+          mkdir -p ~/resume-server
+          
+          # Navigate to app directory
           cd ~/resume-server
-          git pull origin main
+          
+          # Check if git repository exists
+          if [ ! -d .git ]; then
+            # First time deployment
+            git init
+            git remote add origin ${{ github.server_url }}/${{ github.repository }}.git
+            git fetch origin
+            git checkout -f main
+          else
+            # Subsequent deployments
+            git fetch origin
+            git reset --hard origin/main
+          fi
+          
+          # Install dependencies and start/restart application
           npm install --production
           pm2 restart server || pm2 start server.js --name server --env production
