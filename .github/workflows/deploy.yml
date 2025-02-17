@@ -57,8 +57,19 @@ jobs:
           fi
           
           export NODE_ENV=production
-          # Create app directory if it doesn't exist
-          mkdir -p ~/resume-server
+          
+          # Create parent directory and app directory
+          cd ~
+          mkdir -p resume-certs
+          mkdir -p resume-server
+          
+          # Create SSL certificates in parent directory
+          cd ~/resume-certs
+          echo "${{ secrets.SSL_CERTIFICATE }}" > certificate.pem
+          echo "${{ secrets.SSL_PRIVATE_KEY }}" > private-key.pem
+          
+          # Set proper permissions for SSL files
+          chmod 600 certificate.pem private-key.pem
           
           # Navigate to app directory
           cd ~/resume-server

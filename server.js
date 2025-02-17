@@ -1,10 +1,18 @@
 const express = require('express');
-const { createServer } = require('http');
+const { createServer } = require('https');
 const { WebSocketServer } = require('ws');
 const cors = require('cors');
+const fs = require('fs');
+const path = require('path');
 
 const app = express();
 const port = process.env.PORT || 3001;
+
+// SSL options
+const sslOptions = {
+  cert: fs.readFileSync(path.join(__dirname, '..', 'certificate.pem')),
+  key: fs.readFileSync(path.join(__dirname, '..', 'private-key.pem'))
+};
 
 // Enable CORS
 app.use(cors());
@@ -14,8 +22,8 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
-// Create HTTP server
-const server = createServer(app);
+// Create HTTPS server
+const server = createServer(sslOptions, app);
 
 // Initialize WebSocket server
 const wss = new WebSocketServer({ server });
