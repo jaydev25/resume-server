@@ -4,7 +4,7 @@ const { WebSocketServer } = require('ws');
 const cors = require('cors');
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3001;
 
 // Enable CORS
 app.use(cors());
