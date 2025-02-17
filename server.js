@@ -4,6 +4,7 @@ const { WebSocketServer } = require('ws');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
+const url = require('url');
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -14,8 +15,12 @@ const sslOptions = {
   key: fs.readFileSync(path.join(__dirname, '..', 'private-key.pem'))
 };
 
-// Enable CORS
-app.use(cors());
+// Enable CORS with specific options
+app.use(cors({
+  origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : '*',
+  methods: ['GET', 'POST'],
+  allowedHeaders: ['Content-Type']
+}));
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -25,8 +30,30 @@ app.get('/health', (req, res) => {
 // Create HTTPS server
 const server = createServer(sslOptions, app);
 
-// Initialize WebSocket server
-const wss = new WebSocketServer({ server });
+// Initialize WebSocket server with client tracking
+const wss = new WebSocketServer({ 
+  server,
+  clientTracking: true,
+  // Verify client connection
+  verifyClient: ({ origin, req, secure }) => {
+    // Ensure connection is secure
+    if (!secure) {
+      console.log('Rejected insecure connection attempt');
+      return false;
+    }
+    
+    // Check origin if ALLOWED_ORIGINS is set
+    if (process.env.ALLOWED_ORIGINS) {
+      const allowedOrigins = process.env.ALLOWED_ORIGINS.split(',');
+      if (!allowedOrigins.includes(origin)) {
+        console.log(`Rejected connection from unauthorized origin: ${origin}`);
+        return false;
+      }
+    }
+    
+    return true;
+  }
+});
 
 // Track connected clients
 const clients = new Set();
@@ -36,7 +63,7 @@ function broadcastViewerCount() {
   const count = clients.size;
   const message = JSON.stringify({ type: 'viewerCount', count });
   clients.forEach((client) => {
-    if (client.readyState === 1) {
+    if (client.readyState === WebSocket.OPEN) {
       client.send(message);
     }
   });
@@ -46,10 +73,12 @@ function heartbeat() {
   this.isAlive = true;
 }
 
+// Ping clients every 30 seconds to check connection
 const interval = setInterval(() => {
   wss.clients.forEach((ws) => {
     if (ws.isAlive === false) {
-      console.log('Client failed to respond to ping, terminating');
+      console.log('Client connection terminated due to inactivity');
+      clients.delete(ws);
       return ws.terminate();
     }
     
@@ -58,72 +87,60 @@ const interval = setInterval(() => {
   });
 }, 30000);
 
-wss.on('close', () => {
-  clearInterval(interval);
-});
-
+// WebSocket connection handler
 wss.on('connection', (ws, req) => {
-  // Add client to set
-  clients.add(ws);
-  console.log('Client connected. Total clients:', clients.size);
+  console.log('New WSS connection established');
   
-  // Send initial viewer count
-  broadcastViewerCount();
-
+  // Set initial state
   ws.isAlive = true;
   ws.on('pong', heartbeat);
   
-  console.log(`New client connected from ${req.socket.remoteAddress}`);
-
-  // Send initial connection success message
+  // Add client to tracking set
+  clients.add(ws);
+  broadcastViewerCount();
+  
+  // Send initial connection confirmation
   ws.send(JSON.stringify({ 
-    type: 'connection', 
-    status: 'connected' 
+    type: 'connected',
+    message: 'Secure WebSocket connection established'
   }));
-
-  ws.on('error', (error) => {
-    console.error('WebSocket error:', error);
-  });
-
+  
+  // Handle incoming messages
   ws.on('message', (data) => {
     try {
       const message = JSON.parse(data);
-      
-      switch (message.type) {
-        case 'ping':
-          ws.send(JSON.stringify({ type: 'pong' }));
-          break;
-        case 'message':
-          // Broadcast message to all clients
-          wss.clients.forEach((client) => {
-            if (client !== ws && client.readyState === 1) {
-              client.send(JSON.stringify({
-                type: 'message',
-                data: message.data
-              }));
-            }
-          });
-          break;
-      }
+      // Handle message types here
+      console.log('Received message:', message);
     } catch (error) {
       console.error('Error processing message:', error);
     }
   });
-
-  ws.on('close', (code, reason) => {
+  
+  // Handle client disconnect
+  ws.on('close', () => {
+    console.log('Client disconnected');
     clients.delete(ws);
-    console.log('Client disconnected. Total clients:', clients.size);
     broadcastViewerCount();
-    console.log(`Client disconnected. Code: ${code}, Reason: ${reason || 'No reason provided'}`);
+  });
+  
+  // Handle errors
+  ws.on('error', (error) => {
+    console.error('WebSocket error:', error);
+    clients.delete(ws);
+    broadcastViewerCount();
   });
 });
 
-wss.on('error', (error) => {
-  console.error('WebSocket server error:', error);
+// Clean up on server shutdown
+server.on('close', () => {
+  clearInterval(interval);
+  wss.clients.forEach((ws) => {
+    ws.terminate();
+  });
 });
 
 // Start server
 server.listen(port, () => {
-  console.log(`Server running on port ${port}`);
-  console.log('WebSocket server is running');
+  console.log(`Secure server running on port ${port}`);
+  console.log(`WSS endpoint available at wss://hostname:${port}`);
 });
